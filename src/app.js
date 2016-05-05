@@ -20,12 +20,51 @@ var testFunc = function() {
   test.title("This is a test");
 };
 
-var countDown = function(i, callback) {
-    callback = callback || function(){};
-    setInterval(function() {
-        test.body(i);
+var secs = 0;
+var countDown = function(i, uiCard) {
+    secs = setInterval(function() {
+        uiCard.body(i);
         i--;
     }, 1000);
+};
+
+var testCircle = function() {
+  var wind = new UI.Window({
+    backgroundColor: 'black',
+    fullscreen: false
+  });
+  var radial = new UI.Radial({
+    size: new Vector2(140, 140),
+    angle: 0,
+    angle2: 300,
+    radius: 20,
+    backgroundColor: 'cyan',
+    borderColor: 'celeste',
+    borderWidth: 1,
+  });
+  var textfield = new UI.Text({
+    size: new Vector2(140, 60),
+    font: 'gothic-24-bold',
+    text: secs,
+    textAlign: 'center'
+  });
+  var windSize = wind.size();
+  // Center the radial in the window
+  var radialPos = radial.position()
+      .addSelf(windSize)
+      .subSelf(radial.size())
+      .multiplyScalar(0.5);
+  radial.position(radialPos);
+  // Center the textfield in the window
+  var textfieldPos = textfield.position()
+      .addSelf(windSize)
+      .subSelf(textfield.size())
+      .multiplyScalar(0.5);
+  textfield.position(textfieldPos);
+  wind.add(radial);
+  wind.add(textfield);
+  countDown(5, wind);
+  wind.show();
 };
 
 var main = new UI.Card({
@@ -40,8 +79,9 @@ var main = new UI.Card({
 test.show();
 
 test.on('click', 'select', function(e) {
-  countDown(5);
-  testFunc();
+  //countDown(5, test);
+  //testFunc();
+  testCircle();
 });
 
 main.on('click', 'up', function(e) {
