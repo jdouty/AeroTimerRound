@@ -20,15 +20,21 @@ var testFunc = function() {
   test.title("This is a test");
 };
 
-var secs = 0;
+var refreshIntervalId = 0;
 var countDown = function(i, uiCard) {
-    secs = setInterval(function() {
-        uiCard.body(i);
-        i--;
+    refreshIntervalId = setInterval(function() {
+        if (i >= 0) {
+          uiCard.text(i);
+          i--;
+        } else {
+          clearInterval(refreshIntervalId);
+        }
     }, 1000);
 };
 
 var testCircle = function() {
+  var secs = 5;
+  
   var wind = new UI.Window({
     backgroundColor: 'black',
     fullscreen: false
@@ -36,10 +42,10 @@ var testCircle = function() {
   var radial = new UI.Radial({
     size: new Vector2(140, 140),
     angle: 0,
-    angle2: 300,
-    radius: 20,
-    backgroundColor: 'cyan',
-    borderColor: 'celeste',
+    angle2: 360,
+    radius: 15,
+    backgroundColor: 'orange',
+    borderColor: 'orange',
     borderWidth: 1,
   });
   var textfield = new UI.Text({
@@ -62,8 +68,8 @@ var testCircle = function() {
       .multiplyScalar(0.5);
   textfield.position(textfieldPos);
   wind.add(radial);
+  countDown(secs, textfield);
   wind.add(textfield);
-  countDown(5, wind);
   wind.show();
 };
 
