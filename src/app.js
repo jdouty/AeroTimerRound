@@ -7,49 +7,95 @@
 var UI = require('ui');
 var Vector2 = require('vector2');
 
-var test = new UI.Card({
-  title: 'Pebble.js',
-  icon: 'images/menu_icon.png',
-  subtitle: 'Hack The World!',
-  body: 'Press any button.',
-  subtitleColor: 'indigo', // Named colors
-  bodyColor: '#9a0036' // Hex colors
-});
-
-var testFunc = function() {
-  test.title("This is a test");
-};
+var Light = require('ui/light');
 
 var refreshIntervalId = 0;
-var countDown = function(i, uiCard) {
-    refreshIntervalId = setInterval(function() {
-        if (i >= 0) {
-          uiCard.text(i);
-          i--;
-        } else {
-          clearInterval(refreshIntervalId);
-        }
-    }, 1000);
+var countDown = function(i, uiCard, callback) {
+  Light.on();
+  
+  // Must have this here otherwise it waits 1 second to update the Ui
+  // because it immediately enters the setInterval
+  uiCard.text(i);
+  i--;
+  
+  refreshIntervalId = setInterval(function() {
+      if (i >= 0) {
+        uiCard.text(i);
+        i--;
+      } else {
+        // clearInterval is working but is giving a warning in cloudPebble
+        clearInterval(refreshIntervalId);
+        Light.auto();
+        console.log('Calling callback');
+        callback();
+      }
+  }, 1000);
 };
 
-var testCircle = function() {
-  var secs = 5;
+var testCircle = function(callback) {
+  console.log('Entering testCircle');
+  
+  var secs = 15;
   
   var wind = new UI.Window({
     backgroundColor: 'black',
     fullscreen: false
   });
   var radial = new UI.Radial({
-    size: new Vector2(140, 140),
+    size: new Vector2(80, 80),
     angle: 0,
     angle2: 360,
-    radius: 15,
+    radius: 10,
     backgroundColor: 'orange',
     borderColor: 'orange',
     borderWidth: 1,
   });
   var textfield = new UI.Text({
-    size: new Vector2(140, 60),
+    size: new Vector2(80, 40),
+    font: 'gothic-24-bold',
+    text: secs,
+    textAlign: 'center'
+  });
+  var windSize = wind.size();
+  // Center the radial in the window
+  var radialPos = radial.position()
+      .addSelf(windSize)
+      .subSelf(radial.size())
+      .multiplyScalar(0.5);
+  radial.position(radialPos);
+  // Center the textfield in the window
+  var textfieldPos = textfield.position()
+      .addSelf(windSize)
+      .subSelf(textfield.size())
+      .multiplyScalar(0.5);
+  textfield.position(textfieldPos);
+  wind.add(radial);
+  countDown(secs, textfield, callback);
+  wind.add(textfield);
+  wind.show();
+  console.log('Exiting testCircle');
+};
+
+var newCircle = function() {
+  console.log('Entering newCircle');
+  
+  var secs = 15;
+  
+  var wind = new UI.Window({
+    backgroundColor: 'black',
+    fullscreen: false
+  });
+  var radial = new UI.Radial({
+    size: new Vector2(80, 80),
+    angle: 0,
+    angle2: 360,
+    radius: 10,
+    backgroundColor: 'blue',
+    borderColor: 'blue',
+    borderWidth: 1,
+  });
+  var textfield = new UI.Text({
+    size: new Vector2(80, 40),
     font: 'gothic-24-bold',
     text: secs,
     textAlign: 'center'
@@ -71,7 +117,48 @@ var testCircle = function() {
   countDown(secs, textfield);
   wind.add(textfield);
   wind.show();
+  console.log('Exiting newCircle');
 };
+
+var standardPour = function(callback) {
+  testCircle(callback);
+};
+
+var standardStandard = function() {
+  standardPour(newCircle);
+};
+
+var testTwo = new UI.Card({
+  title: 'Pebble.js',
+  icon: 'images/menu_icon.png',
+  subtitle: 'Hack The World!',
+  body: 'Press any button.',
+  subtitleColor: 'indigo', // Named colors
+  bodyColor: '#9a0036' // Hex colors
+});
+
+var mainMenu = new UI.Menu({
+    sections: [{
+      items: [{
+        title: 'Standard',
+        subtitle: 'Standard'
+      }, {
+        title: 'Two Cup',
+        subtitle: 'The Wren'
+      }]
+    }]
+});
+  
+mainMenu.on('select', function(e) {
+    console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+    console.log('The item is titled "' + e.item.title + '-' + e.item.subtitle + '"');
+    if (e.itemIndex === 0) {
+      standardStandard();
+    } else if (e.itemIndex === 1) {
+      
+    }
+});
+mainMenu.show();
 
 var main = new UI.Card({
   title: 'Pebble.js',
@@ -82,9 +169,9 @@ var main = new UI.Card({
   bodyColor: '#9a0036' // Hex colors
 });
 
-test.show();
+mainMenu.show();
 
-test.on('click', 'select', function(e) {
+mainMenu.on('click', 'select', function(e) {
   //countDown(5, test);
   //testFunc();
   testCircle();
